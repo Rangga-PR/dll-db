@@ -7,6 +7,7 @@ import { fetcher } from "@/utils/api";
 import { useEffect } from "react";
 import SpinOverlay from "@/components/SpinOverlay/SpinOverlay";
 import InfoCard from "@/components/InfoCard/InfoCard";
+import type { Cart } from "@/types/cart";
 
 const columns = [
   { name: "ID", key: "id" },
@@ -26,7 +27,10 @@ const journeys = [
 
 export default function CartDetail({ params }: { params: { id: string } }) {
   const { id } = params;
-  const { data, isMutating, trigger } = useSWRMutation(`/carts/${id}`, fetcher);
+  const { data, isMutating, trigger } = useSWRMutation<Cart>(
+    `/carts/${id}`,
+    fetcher
+  );
 
   useEffect(() => {
     trigger && trigger();

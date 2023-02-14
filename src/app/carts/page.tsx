@@ -5,9 +5,10 @@ import Pagination from "@/components/Pagination/Pagination";
 import Table from "@/components/Table/Table";
 import useSWRMutation from "swr/mutation";
 import { fetcher } from "@/utils/api";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import SpinOverlay from "@/components/SpinOverlay/SpinOverlay";
 import { useRouter } from "next/navigation";
+import type { CartList } from "@/types/cart";
 
 const columns = [
   { name: "ID", key: "id" },
@@ -24,14 +25,30 @@ const journeys = [
 
 export default function CartList() {
   const router = useRouter();
-  const { data, isMutating, trigger } = useSWRMutation("/carts", fetcher);
+  const { data, isMutating, trigger } = useSWRMutation<CartList>(
+    "/carts",
+    fetcher
+  );
+
+  const cartsDataSource = useMemo(() => {
+    if (!data?.carts) return [];
+    return data.carts.map(
+      ({ id, userId, total, totalProducts, totalQuantity }) => ({
+        id,
+        userId,
+        total,
+        totalProducts,
+        totalQuantity,
+      })
+    );
+  }, [data]);
 
   useEffect(() => {
     trigger && trigger({ params: { limit: 10, skip: 0 } });
   }, [trigger]);
 
-  const handleChange = (val: number) => {
-    const { limit } = data;
+  const handlePageChange = (val: number) => {
+    const limit = data?.limit || 0;
     trigger({ params: { limit, skip: limit * (val - 1) } });
   };
 
@@ -45,14 +62,14 @@ export default function CartList() {
             <Table
               className="my-4"
               columns={columns}
-              dataSource={data?.carts || []}
+              dataSource={cartsDataSource}
               handleClick={(val) => router.push(`/carts/${val.id}`)}
             />
             <Pagination
               page={data?.skip / data?.limit + 1}
               size={data?.limit}
               total={data?.total}
-              handleChange={handleChange}
+              handleChange={handlePageChange}
               className="mx-auto mt-8 w-fit"
             />
           </>
